@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#e8f1ff" />
+<title>Admin · Productos</title>
+<style>
+  :root {
+    --bg: #e8f1ff;
+    --panel: #ffffff;
+    --panel-2: #dbe9ff;
+    --border: #b9d2f2;
+    --text: #0f2a4a;
+    --muted: #5a7ba6;
+    --accent: #2f7dff;
+    --accent-hover: #1f66e0;
+    --danger: #e5484d;
+    --danger-hover: #c93b40;
+    --ok: #2ecc71;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    min-height: 100dvh;
+    -webkit-text-size-adjust: 100%;
+  }
+  header {
+    padding: 18px 24px;
+    padding-top: max(18px, env(safe-area-inset-top, 0px));
+    border-bottom: 1px solid var(--border);
+    background: var(--panel);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  header h1 { margin: 0; font-size: 1.25rem; font-weight: 600; color: var(--text); }
+  header h1 span { color: var(--accent); }
+
+  /* ===== TABS ===== */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--panel-2);
+    border-radius: 10px;
+    padding: 4px;
+  }
+  .tabs button {
+    background: transparent;
+    color: var(--muted);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: .88rem;
+    font-weight: 600;
+  }
+  .tabs button:hover { background: rgba(47,125,255,.1); }
+  .tabs button.active {
+    background: var(--panel);
+    color: var(--accent);
+    box-shadow: 0 1px 3px rgba(47,125,255,.15);
+  }
+
+  main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .panel-head {
+    display: flex; align-items: center; justify-content: flex-end;
+    gap: 12px; margin-bottom: 16px; flex-wrap: wrap;
+  }
+
+  /* ============ GRID DE PRODUCTOS ============ */
+  .grid-productos {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  .card-producto {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    transition: transform .12s ease, border-color .12s ease;
+    box-shadow: 0 1px 2px rgba(47,125,255,.06);
+  }
+  .card-producto:active { transform: scale(.97); }
+
+  .card-producto .thumb-wrap {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background: var(--panel-2);
+    overflow: hidden;
+    position: relative;
+  }
+  .card-producto .thumb-wrap img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .card-producto .thumb-wrap .sin-foto {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted); font-size: 1.6rem;
+  }
+  .card-producto .badge-oculto {
+    position: absolute; top: 4px; left: 4px;
+    background: rgba(229,72,77,.9);
+    color: #fff;
+    font-size: .6rem;
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-weight: 700;
+    letter-spacing: .3px;
+  }
+
+  .card-producto .card-body {
+    padding: 6px 7px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+  .card-producto .card-nombre {
+    font-size: .72rem;
+    font-weight: 600;
+    line-height: 1.15;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    min-height: 2.3em;
+    overflow-wrap: anywhere;
+    color: var(--text);
+  }
+  .card-producto .card-precio {
+    font-size: .72rem;
+    color: var(--accent);
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .card-producto .card-cats {
+    font-size: .6rem;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .card-producto .card-acciones {
+    display: flex;
+    gap: 3px;
+    margin-top: 4px;
+  }
+  .card-producto .card-acciones button {
+    flex: 1;
+    padding: 4px 0;
+    font-size: .65rem;
+    min-height: 24px;
+    border-radius: 6px;
+  }
+
+  /* Botones base */
+  button {
+    cursor: pointer; border: none; border-radius: 8px;
+    padding: 10px 16px; font-size: .92rem; font-weight: 600;
+    background: var(--accent); color: #fff;
+    touch-action: manipulation;
+    transition: background .15s;
+  }
+  button:hover { background: var(--accent-hover); }
+  button:disabled { opacity: .6; cursor: not-allowed; }
+  button.ghost { background: var(--panel); border: 1px solid var(--border); color: var(--accent); }
+  button.ghost:hover { background: var(--panel-2); }
+  button.danger { background: var(--danger); }
+  button.danger:hover { background: var(--danger-hover); }
+  button.sm { padding: 5px 10px; font-size: .78rem; }
+
+  .empty {
+    grid-column: 1 / -1;
+    text-align: center; color: var(--muted); font-size: .9rem;
+    padding: 40px 16px; background: var(--panel);
+    border: 1px dashed var(--border); border-radius: 10px;
+  }
+
+  /* ===== LISTA CATEGORÍAS ===== */
+  .lista-categorias {
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .item-categoria {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+  }
+  .item-categoria .info { min-width: 0; flex: 1; }
+  .item-categoria .nombre-cat {
+    font-weight: 600; font-size: .95rem;
+    overflow-wrap: anywhere;
+  }
+  .item-categoria .meta-cat {
+    font-size: .75rem; color: var(--muted); margin-top: 2px;
+  }
+  .item-categoria .acciones-cat { display: flex; gap: 6px; flex-shrink: 0; }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(15,42,74,.35);
+    backdrop-filter: blur(2px);
+    display: none; align-items: flex-start; justify-content: center;
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
+    padding: 20px;
+    padding-top: max(20px, env(safe-area-inset-top, 0px));
+    padding-bottom: max(20px, env(safe-area-inset-bottom, 0px));
+    z-index: 50;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    margin: auto;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    width: 100%; max-width: 560px;
+    padding: 22px;
+    box-shadow: 0 20px 60px rgba(15,42,74,.18);
+  }
+  .modal h3 { margin: 0 0 16px; font-size: 1.1rem; color: var(--text); }
+  .field { margin-bottom: 14px; }
+  .field label {
+    font-size: .8rem; color: var(--muted);
+    display: block; margin-bottom: 6px;
+  }
+  .field input[type="text"],
+  .field input[type="number"],
+  .field input[type="url"],
+  .field textarea,
+  .field select {
+    width: 100%;
+    padding: 12px 14px;
+    background: var(--panel);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 16px;
+    font-family: inherit;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(47,125,255,.15);
+  }
+  .field input[type="file"] {
+    width: 100%;
+    padding: 8px;
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    font-size: .85rem;
+  }
+  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .preview-fotos { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .preview-fotos .item-foto { position: relative; }
+  .preview-fotos img {
+    width: 64px; height: 64px; object-fit: cover;
+    border-radius: 8px; border: 1px solid var(--border);
+    display: block;
+  }
+  .preview-fotos .item-foto button {
+    position: absolute; top: -6px; right: -6px;
+    width: 20px; height: 20px; padding: 0; line-height: 18px;
+    border-radius: 50%; font-size: .7rem;
+    background: var(--danger); color: #fff;
+  }
+  .estado-archivo {
+    font-size: .72rem; color: var(--muted);
+    margin-top: 4px; display: block;
+  }
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .modal-actions button { flex: 1; min-height: 44px; }
+
+  /* Checkboxes métodos y categorías */
+  .check-metodos {
+    display: grid; gap: 6px;
+    max-height: 160px; overflow: auto;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px;
+    background: var(--panel-2);
+  }
+  .check-metodos label {
+    display: flex; align-items: center; gap: 8px;
+    font-size: .85rem; color: var(--text);
+    cursor: pointer;
+    margin: 0;
+  }
+  .check-metodos input[type="checkbox"] {
+    width: 16px; height: 16px;
+    accent-color: var(--accent);
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    left: 50%;
+    transform: translateX(-50%) translateY(120%);
+    background: var(--ok); color: #06210f;
+    padding: 12px 20px; border-radius: 10px;
+    font-weight: 600; font-size: .92rem;
+    transition: transform .3s ease;
+    z-index: 100;
+    max-width: min(90vw, 400px);
+    text-align: center;
+    box-shadow: 0 8px 24px rgba(15,42,74,.2);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.error { background: var(--danger); color: #fff; }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    header { padding: 14px 16px; padding-top: max(14px, env(safe-area-inset-top, 0px)); }
+    main { padding: 12px; padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
+    .panel-head { justify-content: stretch; }
+    .panel-head > button { flex: 1 1 auto; min-height: 44px; }
+    .row-2 { grid-template-columns: 1fr; }
+    .modal { padding: 18px; border-radius: 16px; }
+    .grid-productos { gap: 6px; }
+    .card-producto .card-body { padding: 5px 6px 7px; }
+    .card-producto .card-nombre { font-size: .68rem; }
+    .card-producto .card-precio { font-size: .68rem; }
+    .tabs { width: 100%; }
+    .tabs button { flex: 1; padding: 8px 10px; font-size: .82rem; }
+  }
+  @media (max-width: 380px) {
+    .grid-productos { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (min-width: 641px) {
+    .grid-productos { grid-template-columns: repeat(6, 1fr); gap: 10px; }
+  }
+  @media (min-width: 1024px) {
+    .grid-productos { grid-template-columns: repeat(8, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Admin · <span>Tienda</span></h1>
+  <div class="tabs">
+    <button class="active" data-tab="productos">Productos</button>
+    <button data-tab="categorias">Categorías</button>
+  </div>
+</header>
+
+<main>
+  <!-- ============ PANEL PRODUCTOS ============ -->
+  <section class="panel active" id="panel-productos">
+    <div class="panel-head">
+      <button id="btn-add-producto">+ Añadir producto</button>
+    </div>
+    <div class="grid-productos" id="grid-productos">
+      <div class="empty">Cargando…</div>
+    </div>
+  </section>
+
+  <!-- ============ PANEL CATEGORÍAS ============ -->
+  <section class="panel" id="panel-categorias">
+    <div class="panel-head">
+      <button id="btn-add-categoria">+ Añadir categoría</button>
+    </div>
+    <div class="lista-categorias" id="lista-categorias">
+      <div class="empty">Cargando…</div>
+    </div>
+  </section>
+</main>
+
+<!-- ===== MODAL PRODUCTO ===== -->
+<div class="modal-overlay" id="modal-producto">
+  <div class="modal">
+    <h3 id="modal-producto-title">Añadir producto</h3>
+    <form id="form-producto">
+      <input type="hidden" id="producto-id" />
+      <input type="hidden" id="producto-foto-principal" />
+
+      <div class="field">
+        <label for="producto-nombre">Nombre</label>
+        <input id="producto-nombre" type="text" placeholder="Ej: Camiseta Oversize" required autocomplete="off" />
+      </div>
+
+      <div class="field">
+        <label for="producto-descripcion">Descripción</label>
+        <textarea id="producto-descripcion" rows="3" placeholder="Detalles del producto…"></textarea>
+      </div>
+
+      <div class="field">
+        <label>Foto principal</label>
+        <input type="file" id="input-foto-principal" accept="image/*" />
+        <span class="estado-archivo" id="estado-foto-principal"></span>
+        <div class="preview-fotos" id="preview-foto-principal"></div>
+      </div>
+
+      <div class="field">
+        <label>Fotos secundarias (máx. 5)</label>
+        <input type="file" id="input-fotos-secundarias" accept="image/*" multiple />
+        <span class="estado-archivo" id="estado-fotos-secundarias"></span>
+        <div class="preview-fotos" id="preview-fotos-secundarias"></div>
+      </div>
+
+      <div class="row-2">
+        <div class="field">
+          <label for="producto-precio">Precio</label>
+          <input id="producto-precio" type="number" step="0.01" min="0" inputmode="decimal" required placeholder="25.50" />
+        </div>
+        <div class="field">
+          <label for="producto-moneda">Moneda del precio</label>
+          <select id="producto-moneda" required>
+            <option value="" disabled selected>-- Selecciona --</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Categorías (obligatorio, mínimo 1)</label>
+        <button type="button" class="ghost sm" id="btn-toggle-todas-categorias" style="margin-bottom:8px;">Seleccionar todas</button>
+        <div id="lista-checkbox-categorias" class="check-metodos"></div>
+      </div>
+
+      <div class="field">
+        <label>Métodos de pago aceptados</label>
+        <button type="button" class="ghost sm" id="btn-toggle-todos-metodos" style="margin-bottom:8px;">Seleccionar todos</button>
+        <div id="lista-checkbox-metodos" class="check-metodos"></div>
+      </div>
+
+      <div class="field" style="display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="producto-activo" checked style="width:auto;transform:scale(1.2);accent-color:var(--accent);" />
+        <label for="producto-activo" style="margin:0;font-size:.9rem;color:var(--text);">Visible en la tienda</label>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="ghost" data-close="modal-producto">Cancelar</button>
+        <button type="submit" id="producto-submit">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ===== MODAL CATEGORÍA ===== -->
+<div class="modal-overlay" id="modal-categoria">
+  <div class="modal">
+    <h3 id="modal-categoria-title">Añadir categoría</h3>
+    <form id="form-categoria">
+      <input type="hidden" id="categoria-id" />
+      <div class="field">
+        <label for="categoria-nombre">Nombre</label>
+        <input id="categoria-nombre" type="text" placeholder="Ej: Ropa" required autocomplete="off" />
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="ghost" data-close="modal-categoria">Cancelar</button>
+        <button type="submit" id="categoria-submit">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   CONFIG
+   ============================================================ */
+var PRODUCTOS_API = "https://productos.soyjhonydival.workers.dev";
+var MONEDAS_API = "https://monedas.soyjhonydival.workers.dev";
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function $(id) { return document.getElementById(id); }
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+}
+function toast(msg, isError) {
+  var el = $("toast");
+  el.textContent = msg;
+  if (isError) el.classList.add("error");
+  else el.classList.remove("error");
+  el.classList.add("show");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(function () { el.classList.remove("show"); }, 2600);
+}
+function extraerLista(data, claves) {
+  if (Array.isArray(data)) return data;
+  if (!data || typeof data !== "object") return [];
+  for (var i = 0; i < claves.length; i++) {
+    if (Array.isArray(data[claves[i]])) return data[claves[i]];
+  }
+  if (Array.isArray(data.data)) return data.data;
+  if (Array.isArray(data.results)) return data.results;
+  return [];
+}
+
+/* ============================================================
+   FETCH PRODUCTOS
+   ============================================================ */
+function apiProductos(path, options) {
+  options = options || {};
+  return fetch(PRODUCTOS_API + path, {
+    headers: { "Content-Type": "application/json" },
+    method: options.method || "GET",
+    body: options.body
+  }).then(function (res) {
+    return res.json().catch(function () { return {}; }).then(function (data) {
+      if (!res.ok) throw new Error(data.error || ("Error " + res.status));
+      return data;
+    });
+  });
+}
+
+/* ============================================================
+   ESTADO
+   ============================================================ */
+var productosCache = [];
+var monedasCache = [];
+var metodosCache = [];
+var categoriasCache = [];
+var fotosSecundariasURLs = [];
+
+/* ============================================================
+   TABS
+   ============================================================ */
+function activarTab(nombre) {
+  document.querySelectorAll(".tabs button").forEach(function (b) {
+    b.classList.toggle("active", b.getAttribute("data-tab") === nombre);
+  });
+  document.querySelectorAll(".panel").forEach(function (p) {
+    p.classList.toggle("active", p.id === "panel-" + nombre);
+  });
+}
+document.querySelectorAll(".tabs button").forEach(function (b) {
+  b.addEventListener("click", function () {
+    activarTab(b.getAttribute("data-tab"));
+  });
+});
+
+/* ============================================================
+   CARGAR CATÁLOGOS
+   ============================================================ */
+function cargarCatalogos() {
+  return Promise.all([
+    fetch(MONEDAS_API + "/monedas").then(function (r) {
+      if (!r.ok) throw new Error("monedas HTTP " + r.status);
+      return r.json();
+    }),
+    fetch(MONEDAS_API + "/metodos-pago").then(function (r) {
+      if (!r.ok) throw new Error("metodos-pago HTTP " + r.status);
+      return r.json();
+    }),
+    apiProductos("/categorias")
+  ]).then(function (arr) {
+    monedasCache    = extraerLista(arr[0], ["monedas"]);
+    metodosCache    = extraerLista(arr[1], ["metodos", "metodos_pago", "metodos-pago"]);
+    categoriasCache = extraerLista(arr[2], ["categorias"]);
+
+    if (!monedasCache.length) toast("No se recibieron monedas del servidor", true);
+
+    llenarSelectMonedas();
+    llenarCheckMetodos();
+    llenarCheckCategorias();
+  }).catch(function (err) {
+    console.error("[catalogos] error:", err);
+    toast("Error cargando catálogos: " + err.message, true);
+  });
+}
+
+function llenarSelectMonedas() {
+  var sel = $("producto-moneda");
+  sel.innerHTML = '<option value="" disabled selected>-- Selecciona --</option>';
+  if (!monedasCache.length) {
+    var opt = document.createElement("option");
+    opt.value = "";
+    opt.disabled = true;
+    opt.textContent = "(sin monedas)";
+    sel.appendChild(opt);
+    return;
+  }
+  monedasCache.forEach(function (m) {
+    var opt = document.createElement("option");
+    opt.value = m.id;
+    var nom = m.nombre || m.name || m.sigla || ("Moneda " + m.id);
+    var sig = m.sigla || m.codigo || m.code || "";
+    opt.textContent = sig ? (nom + " (" + sig + ")") : nom;
+    sel.appendChild(opt);
+  });
+}
+
+function llenarCheckMetodos() {
+  var cont = $("lista-checkbox-metodos");
+  cont.innerHTML = "";
+  if (!metodosCache.length) {
+    cont.innerHTML = '<small style="color:var(--muted);">No hay métodos creados aún.</small>';
+    return;
+  }
+  metodosCache.forEach(function (m) {
+    var label = document.createElement("label");
+    var nom = m.nombre || m.name || ("Método " + m.id);
+    var sig = m.moneda_sigla || m.sigla || "";
+    label.innerHTML = '<input type="checkbox" value="' + m.id + '" data-metodo="' + m.id + '"> ' +
+      escapeHtml(nom) + (sig ? ' <span style="color:var(--muted);font-size:.75rem;">(' + escapeHtml(sig) + ')</span>' : '');
+    cont.appendChild(label);
+  });
+}
+
+function llenarCheckCategorias() {
+  var cont = $("lista-checkbox-categorias");
+  cont.innerHTML = "";
+  if (!categoriasCache.length) {
+    cont.innerHTML = '<small style="color:var(--muted);">No hay categorías creadas aún. Ve a la pestaña "Categorías".</small>';
+    return;
+  }
+  categoriasCache.forEach(function (c) {
+    var label = document.createElement("label");
+    label.innerHTML = '<input type="checkbox" value="' + c.id + '" data-categoria="' + c.id + '"> ' +
+      escapeHtml(c.nombre);
+    cont.appendChild(label);
+  });
+}
+
+/* ============================================================
+   CARGAR PRODUCTOS
+   ============================================================ */
+function cargarProductos() {
+  var grid = $("grid-productos");
+  return apiProductos("/productos").then(function (data) {
+    productosCache = Array.isArray(data) ? data : extraerLista(data, ["productos"]);
+    renderProductos();
+  }).catch(function (err) {
+    grid.innerHTML = '<div class="empty">Error: ' + escapeHtml(err.message) + '</div>';
+  });
+}
+
+function renderProductos() {
+  var grid = $("grid-productos");
+  if (!productosCache.length) {
+    grid.innerHTML = '<div class="empty">No hay productos. Pulsa "+ Añadir producto".</div>';
+    return;
+  }
+  var html = "";
+  productosCache.forEach(function (p) {
+    var imgHtml = p.foto_principal
+      ? '<img src="' + escapeHtml(p.foto_principal) + '" alt="" loading="lazy">'
+      : '<div class="sin-foto">📦</div>';
+    var badge = p.activo ? "" : '<span class="badge-oculto">OCULTO</span>';
+    var cats = (p.categorias || []).map(function (c) { return c.nombre; }).join(", ");
+    var catsHtml = cats ? '<div class="card-cats">' + escapeHtml(cats) + '</div>' : '';
+    html += '<div class="card-producto">' +
+      '<div class="thumb-wrap">' + imgHtml + badge + '</div>' +
+      '<div class="card-body">' +
+        '<div class="card-nombre">' + escapeHtml(p.nombre) + '</div>' +
+        '<div class="card-precio">' + escapeHtml(p.precio) + ' ' + escapeHtml(p.moneda_sigla || '') + '</div>' +
+        catsHtml +
+        '<div class="card-acciones">' +
+          '<button class="ghost" data-accion="editar-producto" data-id="' + p.id + '">Editar</button>' +
+          '<button class="danger" data-accion="eliminar-producto" data-id="' + p.id + '">×</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  });
+  grid.innerHTML = html;
+}
+
+/* ============================================================
+   CARGAR / RENDER CATEGORÍAS (PESTAÑA)
+   ============================================================ */
+function cargarCategorias() {
+  var cont = $("lista-categorias");
+  return apiProductos("/categorias").then(function (data) {
+    categoriasCache = extraerLista(data, ["categorias"]);
+    renderCategorias();
+    llenarCheckCategorias();
+  }).catch(function (err) {
+    cont.innerHTML = '<div class="empty">Error: ' + escapeHtml(err.message) + '</div>';
+  });
+}
+
+function renderCategorias() {
+  var cont = $("lista-categorias");
+  if (!categoriasCache.length) {
+    cont.innerHTML = '<div class="empty">No hay categorías. Pulsa "+ Añadir categoría".</div>';
+    return;
+  }
+  var html = "";
+  categoriasCache.forEach(function (c) {
+    var total = c.total_productos != null ? c.total_productos : 0;
+    html += '<div class="item-categoria">' +
+      '<div class="info">' +
+        '<div class="nombre-cat">' + escapeHtml(c.nombre) + '</div>' +
+        '<div class="meta-cat">' + total + ' producto(s)</div>' +
+      '</div>' +
+      '<div class="acciones-cat">' +
+        '<button class="ghost sm" data-accion="editar-categoria" data-id="' + c.id + '">Editar</button>' +
+        '<button class="danger sm" data-accion="eliminar-categoria" data-id="' + c.id + '">×</button>' +
+      '</div>' +
+    '</div>';
+  });
+  cont.innerHTML = html;
+}
+
+function abrirModalCategoria(modo, c) {
+  $("form-categoria").reset();
+  $("categoria-id").value = "";
+  if (modo === "editar" && c) {
+    $("modal-categoria-title").textContent = "Editar categoría";
+    $("categoria-id").value = c.id;
+    $("categoria-nombre").value = c.nombre || "";
+  } else {
+    $("modal-categoria-title").textContent = "Añadir categoría";
+  }
+  $("modal-categoria").classList.add("show");
+  setTimeout(function () { $("categoria-nombre").focus(); }, 100);
+}
+
+function editarCategoria(id) {
+  var c = categoriasCache.find(function (x) { return x.id === id; });
+  if (c) abrirModalCategoria("editar", c);
+}
+
+function eliminarCategoria(id, nombre) {
+  if (!confirm('¿Eliminar la categoría "' + nombre + '"?')) return;
+  apiProductos("/categorias/" + id, { method: "DELETE" }).then(function () {
+    toast("Categoría eliminada");
+    return cargarCategorias().then(cargarProductos);
+  }).catch(function (err) {
+    toast(err.message, true);
+  });
+}
+
+$("btn-add-categoria").addEventListener("click", function () {
+  abrirModalCategoria("crear");
+});
+
+$("form-categoria").addEventListener("submit", function (e) {
+  e.preventDefault();
+  var id = $("categoria-id").value;
+  var nombre = $("categoria-nombre").value.trim();
+  if (!nombre) { toast("El nombre es obligatorio", true); return; }
+  var payload = { nombre: nombre };
+  var btn = $("categoria-submit");
+  btn.disabled = true;
+  var p = id
+    ? apiProductos("/categorias/" + id, { method: "PUT", body: JSON.stringify(payload) })
+    : apiProductos("/categorias", { method: "POST", body: JSON.stringify(payload) });
+  p.then(function () {
+    toast(id ? "Categoría actualizada" : "Categoría creada");
+    $("modal-categoria").classList.remove("show");
+    return cargarCategorias().then(cargarProductos);
+  }).catch(function (err) {
+    toast(err.message, true);
+  }).finally(function () {
+    btn.disabled = false;
+  });
+});
+
+/* ============================================================
+   SUBIR IMAGEN
+   ============================================================ */
+function subirImagenAWorker(file) {
+  var fd = new FormData();
+  fd.append("imagen", file);
+  return fetch(PRODUCTOS_API + "/upload", { method: "POST", body: fd })
+    .then(function (res) { return res.json(); })
+    .then(function (data) {
+      if (!data.ok) throw new Error(data.error || "Error al subir");
+      return data.url;
+    });
+}
+
+/* ============================================================
+   MODAL PRODUCTO
+   ============================================================ */
+function abrirModalProducto(modo, p) {
+  $("form-producto").reset();
+  $("producto-id").value = "";
+  $("producto-foto-principal").value = "";
+  fotosSecundariasURLs = [];
+  $("preview-foto-principal").innerHTML = "";
+  $("preview-fotos-secundarias").innerHTML = "";
+  $("estado-foto-principal").textContent = "";
+  $("estado-fotos-secundarias").textContent = "";
+  $("producto-activo").checked = true;
+  document.querySelectorAll("#lista-checkbox-metodos input[type=checkbox]").forEach(function (c) { c.checked = false; });
+  document.querySelectorAll("#lista-checkbox-categorias input[type=checkbox]").forEach(function (c) { c.checked = false; });
+
+  if (modo === "editar" && p) {
+    $("modal-producto-title").textContent = "Editar producto";
+    $("producto-id").value = p.id;
+    $("producto-nombre").value = p.nombre || "";
+    $("producto-descripcion").value = p.descripcion || "";
+    $("producto-precio").value = p.precio;
+    $("producto-moneda").value = p.moneda_id;
+    $("producto-activo").checked = !!p.activo;
+    $("producto-foto-principal").value = p.foto_principal || "";
+    if (p.foto_principal) {
+      var cont = $("preview-foto-principal");
+      var img = document.createElement("img");
+      img.src = p.foto_principal;
+      cont.appendChild(img);
+    }
+    if (Array.isArray(p.fotos_secundarias)) {
+      fotosSecundariasURLs = p.fotos_secundarias.slice();
+      renderPreviewSecundarias();
+    }
+    if (Array.isArray(p.metodos)) {
+      var ids = p.metodos.map(function (m) { return String(m.id); });
+      document.querySelectorAll("#lista-checkbox-metodos input[type=checkbox]").forEach(function (c) {
+        c.checked = ids.indexOf(c.value) !== -1;
+      });
+    }
+    if (Array.isArray(p.categorias)) {
+      var cids = p.categorias.map(function (c) { return String(c.id); });
+      document.querySelectorAll("#lista-checkbox-categorias input[type=checkbox]").forEach(function (c) {
+        c.checked = cids.indexOf(c.value) !== -1;
+      });
+    }
+  } else {
+    $("modal-producto-title").textContent = "Añadir producto";
+    $("producto-moneda").selectedIndex = 0;
+  }
+
+  $("modal-producto").classList.add("show");
+  setTimeout(function () { $("producto-nombre").focus(); }, 100);
+}
+
+function renderPreviewSecundarias() {
+  var cont = $("preview-fotos-secundarias");
+  cont.innerHTML = "";
+  fotosSecundariasURLs.forEach(function (url, i) {
+    var wrap = document.createElement("div");
+    wrap.className = "item-foto";
+    var img = document.createElement("img");
+    img.src = url;
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = "×";
+    btn.onclick = function () {
+      fotosSecundariasURLs.splice(i, 1);
+      renderPreviewSecundarias();
+    };
+    wrap.appendChild(img);
+    wrap.appendChild(btn);
+    cont.appendChild(wrap);
+  });
+}
+
+/* ============================================================
+   SUBIDA: FOTO PRINCIPAL
+   ============================================================ */
+$("input-foto-principal").addEventListener("change", function (e) {
+  var file = e.target.files[0];
+  if (!file) return;
+  var cont = $("preview-foto-principal");
+  var estado = $("estado-foto-principal");
+  cont.innerHTML = "";
+  var img = document.createElement("img");
+  img.src = URL.createObjectURL(file);
+  cont.appendChild(img);
+  estado.textContent = "Subiendo…";
+  subirImagenAWorker(file).then(function (url) {
+    $("producto-foto-principal").value = url;
+    estado.textContent = "Listo ✓";
+  }).catch(function (err) {
+    estado.textContent = "Error: " + err.message;
+    cont.innerHTML = "";
+  });
+});
+
+/* ============================================================
+   SUBIDA: FOTOS SECUNDARIAS
+   ============================================================ */
+$("input-fotos-secundarias").addEventListener("change", function (e) {
+  var files = Array.prototype.slice.call(e.target.files);
+  var estado = $("estado-fotos-secundarias");
+  var espacio = 5 - fotosSecundariasURLs.length;
+  if (espacio <= 0) {
+    estado.textContent = "Ya tienes 5 fotos";
+    e.target.value = "";
+    return;
+  }
+  files = files.slice(0, espacio);
+  estado.textContent = "Subiendo " + files.length + "…";
+  var pendientes = files.length;
+  var errores = 0;
+  files.forEach(function (file) {
+    subirImagenAWorker(file).then(function (url) {
+      if (fotosSecundariasURLs.length < 5) {
+        fotosSecundariasURLs.push(url);
+        renderPreviewSecundarias();
+      }
+    }).catch(function (err) {
+      errores++;
+      toast("Error subiendo foto: " + err.message, true);
+    }).finally(function () {
+      pendientes--;
+      if (pendientes === 0) {
+        estado.textContent = errores ? (errores + " error(es)") : "Listo ✓";
+        e.target.value = "";
+      }
+    });
+  });
+});
+
+/* ============================================================
+   TOGGLE "SELECCIONAR TODOS"
+   ============================================================ */
+$("btn-toggle-todos-metodos").addEventListener("click", function () {
+  var checks = document.querySelectorAll("#lista-checkbox-metodos input[type=checkbox]");
+  var todosMarcados = Array.prototype.every.call(checks, function (c) { return c.checked; });
+  Array.prototype.forEach.call(checks, function (c) { c.checked = !todosMarcados; });
+});
+$("btn-toggle-todas-categorias").addEventListener("click", function () {
+  var checks = document.querySelectorAll("#lista-checkbox-categorias input[type=checkbox]");
+  var todosMarcados = Array.prototype.every.call(checks, function (c) { return c.checked; });
+  Array.prototype.forEach.call(checks, function (c) { c.checked = !todosMarcados; });
+});
+
+/* ============================================================
+   GUARDAR PRODUCTO
+   ============================================================ */
+$("form-producto").addEventListener("submit", function (e) {
+  e.preventDefault();
+  var id = $("producto-id").value;
+  var fotoPrincipal = $("producto-foto-principal").value;
+  if (!fotoPrincipal) {
+    toast("Debes subir una foto principal", true);
+    return;
+  }
+  var metodosSel = Array.prototype.map.call(
+    document.querySelectorAll("#lista-checkbox-metodos input[type=checkbox]:checked"),
+    function (c) { return Number(c.value); }
+  );
+  var categoriasSel = Array.prototype.map.call(
+    document.querySelectorAll("#lista-checkbox-categorias input[type=checkbox]:checked"),
+    function (c) { return Number(c.value); }
+  );
+  if (categoriasSel.length === 0) {
+    toast("Debes seleccionar al menos una categoría", true);
+    return;
+  }
+
+  var payload = {
+    nombre: $("producto-nombre").value.trim(),
+    descripcion: $("producto-descripcion").value.trim(),
+    foto_principal: fotoPrincipal,
+    fotos_secundarias: fotosSecundariasURLs.slice(0, 5),
+    precio: Number($("producto-precio").value),
+    moneda_id: Number($("producto-moneda").value),
+    activo: $("producto-activo").checked ? 1 : 0,
+    metodos: metodosSel,
+    categorias: categoriasSel
+  };
+
+  var btn = $("producto-submit");
+  btn.disabled = true;
+  var p = id
+    ? apiProductos("/productos/" + id, { method: "PUT", body: JSON.stringify(payload) })
+    : apiProductos("/productos", { method: "POST", body: JSON.stringify(payload) });
+
+  p.then(function () {
+    toast(id ? "Producto actualizado" : "Producto creado");
+    $("modal-producto").classList.remove("show");
+    return cargarProductos();
+  }).catch(function (err) {
+    toast(err.message, true);
+  }).finally(function () {
+    btn.disabled = false;
+  });
+});
+
+/* ============================================================
+   EDITAR / ELIMINAR PRODUCTO
+   ============================================================ */
+function editarProducto(id) {
+  var p = productosCache.find(function (x) { return x.id === id; });
+  if (p) abrirModalProducto("editar", p);
+}
+function eliminarProducto(id, nombre) {
+  if (!confirm('¿Eliminar el producto "' + nombre + '"?')) return;
+  apiProductos("/productos/" + id, { method: "DELETE" }).then(function () {
+    toast("Producto eliminado");
+    return cargarProductos();
+  }).catch(function (err) {
+    toast(err.message, true);
+  });
+}
+
+/* ============================================================
+   DELEGACIÓN DE EVENTOS (botones dinámicos)
+   ============================================================ */
+document.addEventListener("click", function (e) {
+  var btn = e.target.closest("[data-accion]");
+  if (!btn) return;
+  var accion = btn.getAttribute("data-accion");
+  var id = Number(btn.getAttribute("data-id"));
+
+  if (accion === "editar-producto") {
+    editarProducto(id);
+  } else if (accion === "eliminar-producto") {
+    var p = productosCache.find(function (x) { return x.id === id; });
+    if (p) eliminarProducto(p.id, p.nombre);
+  } else if (accion === "editar-categoria") {
+    editarCategoria(id);
+  } else if (accion === "eliminar-categoria") {
+    var c = categoriasCache.find(function (x) { return x.id === id; });
+    if (c) eliminarCategoria(c.id, c.nombre);
+  }
+});
+
+/* ============================================================
+   INIT
+   ============================================================ */
+$("btn-add-producto").addEventListener("click", function () {
+  abrirModalProducto("crear");
+});
+document.querySelectorAll("[data-close]").forEach(function (btn) {
+  btn.addEventListener("click", function () {
+    $(btn.getAttribute("data-close")).classList.remove("show");
+  });
+});
+document.querySelectorAll(".modal-overlay").forEach(function (ov) {
+  ov.addEventListener("click", function (e) {
+    if (e.target === ov) ov.classList.remove("show");
+  });
+});
+
+cargarCatalogos().then(function () {
+  return Promise.all([cargarProductos(), cargarCategorias()]);
+});
+</script>
+</body>
+</html>
